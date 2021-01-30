@@ -1,2 +1,20 @@
 # drone-ui-alerts
 drone.io ui gets updating favicon and desktop notifications
+
+## What does this do
+
+It makes the drone-ui favicon refelect the status of the pipeline on the current page instead of the status of all pipelines running.
+
+It also sends a notification when your pipeline changes status.
+
+## Why
+
+Because it is very annoying to have to keep checking the drone page for updates instead of looking at the favicon or seeing a notification. There is an [open issue](https://github.com/drone/drone-ui/issues/290) in the drone-ui repo about this.
+
+## Installation
+
+This script was designed to be used with [Violentmonkey](https://violentmonkey.github.io/) but should also work with [Greasemonkey](https://wiki.greasespot.net/Greasemonkey) or [Tampermonkey](https://www.tampermonkey.net/).
+
+To use this script just install one of the extension above, click [create new script](https://violentmonkey.github.io/guide/creating-a-userscript/), and paste [this](https://github.com/RayBB/drone-ui-alerts/blob/main/index.js) script in.
+
+You should upate the `@match` section at the top of the script with the url of your drone installation.
