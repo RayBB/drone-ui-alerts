@@ -18,3 +18,14 @@ This script was designed to be used with [Violentmonkey](https://violentmonkey.g
 To use this script just install one of the extension above, click [create new script](https://violentmonkey.github.io/guide/creating-a-userscript/), and paste [this](https://github.com/RayBB/drone-ui-alerts/blob/main/index.js) script in.
 
 You should upate the `@match` section at the top of the script with the url of your drone installation.
+
+### Next Steps
+
+* Use getValue for preferences https://violentmonkey.github.io/api/gm/#gm_getvalue
+* Use a more object oriented approach
+
+## Learnings
+
+* You cannot use CSS to change SVGs when they are encoded in `img` tags. Otherwise I would use css to [change the svg color](https://css-tricks.com/lodge/svg/09-svg-data-uris/).
+* You [don't](https://css-tricks.com/probably-dont-base64-svg/) need to base64 encode [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme), but you may need to encode them with [encodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent).
+* 
