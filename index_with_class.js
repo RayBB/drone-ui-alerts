@@ -12,42 +12,63 @@
 
 (function () {
     'use strict';
-    const ICON_COLORS = {
-        "success": "#19d78c",
-        "running": "#ffbe00",
-        "failure": "#ff4164",
-        "pending": "#96a5be"
-    }
 
     const DEFAULT_COLOR = 'black';
+    const FAVICON_UPDATE_INTERVAL = 1000; // 1 second to avoid querying the page too much
     const NOTIFICATION_TIMEOUT = 3000;
     const NOTIFICATIONS_ENABLED = true;
 
+    const ICON_COLORS = {
+        success: "#19d78c",
+        running: "#ffbe00",
+        failure: "#ff4164",
+        killed: "#ffabba", // This color is my selection rather than taken from the page
+        pending: "#96a5be"
+    }
+
+    const SELECTORS = Object.freeze({
+        favicon: "#favicon",
+        svg: ".logo svg",
+        buildStatus: ".repo-item .status",
+        buildTitle: ".repo-item .title"
+    })
+
     class DroneAlerter {
-        constructor() {
+        constructor(autoUpdate = true) {
             this.status = "";
             this.page = "";
-            this.FAVICON_ELEMENT = document.querySelector("#favicon");
-            this.ENCODED_SVG_DATA_URI = "data:image/svg+xml," + encodeURIComponent(document.querySelector(".logo svg").outerHTML);
+            this.ENCODED_SVG_DATA_URI = "data:image/svg+xml," + encodeURIComponent(document.querySelector(SELECTORS.svg).outerHTML);
+            if (autoUpdate) {
+                const alerter = this;
+                setInterval(() => alerter.checkForStatusChange(), FAVICON_UPDATE_INTERVAL);
+            }
+            // These below lines are WIP to use mutation observer for updates on page change
+            // let alerter = this;
+            // let observer = new MutationObserver(function(){alerter.pageChanged()});
+            // observer.observe(document.querySelector('title'), { childList: true });
         }
         statusChanged() {
-            console.log("status changed")
             this.updateFaviconColor()
             if (this.shouldSendNotification()) {
                 this.sendNotification();
             }
         }
-        checkForStatusChange() {
-            const statusElement = document.querySelector(".repo-item .status");
+        getStatus() {
+            const statusElement = document.querySelector(SELECTORS.buildStatus);
             const wordsInStatusElementClassName = statusElement.className.replaceAll("-", " ").split(" ");
             const currentStatus = wordsInStatusElementClassName.filter(x => Object.keys(ICON_COLORS).includes(x))[0];
-            if (this.status !== currentStatus) {
-                this.status = currentStatus;
+            return currentStatus;
+        }
+        checkForStatusChange() {
+            const newStatus = this.getStatus();
+            if (this.status !== newStatus) {
+                this.status = newStatus;
                 this.statusChanged();
             }
         }
         updateFaviconColor() {
-            this.FAVICON_ELEMENT.href = this.getDroneSVG(ICON_COLORS[this.status]);
+            // we run this query selector every time because it changes after page load
+            document.querySelector(SELECTORS.favicon).href = this.getDroneSVG(ICON_COLORS[this.status]);
         }
         getDroneSVG(color = DEFAULT_COLOR) {
             return this.ENCODED_SVG_DATA_URI.replace("currentColor", encodeURIComponent(color));
@@ -60,7 +81,7 @@
         sendNotification() {
             const notificationPromise = GM_notification({
                 title: `Status: ${this.status}`,
-                text: document.querySelector(".repo-item .title").innerText,
+                text: document.querySelector(SELECTORS.buildTitle).innerText,
                 image: this.getDroneSVG(ICON_COLORS[this.status]),
                 onclick: window.focus
             });
@@ -68,10 +89,5 @@
         }
     }
 
-    console.log(new Date())
-    waitForKeyElements(".logo svg", () => {
-        let d = new DroneAlerter();
-        setInterval(() => d.checkForStatusChange(), 1000);
-        console.log(new Date())
-    });
+    waitForKeyElements(SELECTORS.svg, () => new DroneAlerter());
 })();
