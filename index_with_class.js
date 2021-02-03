@@ -88,6 +88,5 @@
             setTimeout(notificationPromise.remove, NOTIFICATION_TIMEOUT);
         }
     }
-
-    waitForKeyElements(SELECTORS.svg, () => new DroneAlerter());
+    waitForKeyElements(SELECTORS.svg, () => { new DroneAlerter() });
 })();
