@@ -1,5 +1,5 @@
 # drone-ui-alerts
-drone.io ui gets updating favicon and desktop notifications
+Add updating favicon and desktop notifications to [drone.io ui](https://github.com/drone/drone-ui).
 
 ## What does this do
 
