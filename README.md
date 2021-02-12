@@ -7,7 +7,7 @@ It makes the drone-ui favicon refelect the status of the pipeline on the current
 
 It also sends a notification when your pipeline changes status.
 
-<img src="update.gif" alt="colors updating" height="150px"/>
+<img src="docs/update.gif" alt="colors updating" height="150px"/>
 
 ## Why
 

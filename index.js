@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Drone Favicon
+// @name         Drone Favicon Updater
 // @namespace    https://github.com/RayBB/drone-ui-alerts
 // @version      0.1
 // @description  Drone favicon now represents the current page build status not all builds running.
@@ -7,92 +7,92 @@
 // @match        https://drone.*/*
 // @grant        GM_notification
 // @updateURL    https://github.com/RayBB/drone-ui-alerts/blob/main/index.js
+// @require      https://cdn.jsdelivr.net/gh/CoeJoder/waitForKeyElements.js@v1.2/waitForKeyElements.js
 // ==/UserScript==
-
-/*
-TODO:
-Use mutation observer instead of a simple interval https://jsbin.com/livubes/
-Create a github repo for this and link it in drone ui repo
-*/
 
 (function () {
     'use strict';
-    // These match the drone css
-    const ICON_COLORS = {
-        "success": "#19d78c",
-        "running": "#ffbe00",
-        "failure": "#ff4164",
-        "pending": "#96a5be"
-    }
+
     const DEFAULT_COLOR = 'black';
-    const NOTIFICATION_TIMEOUT = 3000; // miliseconds
+    const FAVICON_UPDATE_INTERVAL = 1000; // 1 second to avoid accessing the DOM often
+    const NOTIFICATION_TIMEOUT = 3000;
     const NOTIFICATIONS_ENABLED = true;
-    let oldStatus = "";     // the status when last checked
-    let oldPage = "";       // the url when last checked
 
-    /*
-    * Get the svg string for drone icon with a specific color
-    * @param  {string} color    The color for the drone svg
-    * @return {string}          drone icon svg
-    */
-    function getDroneSVG(color = DEFAULT_COLOR) {
-        const svg = document.querySelector(".logo svg").outerHTML.replace("currentColor", color)
-        const encodedSvg = encodeURIComponent(svg);
-        const dataPrefix = "data:image/svg+xml,"
-        return dataPrefix + encodedSvg;
-    }
+    const ICON_COLORS = {
+        "": DEFAULT_COLOR,
+        success: "#19d78c",
+        running: "#ffbe00",
+        failure: "#ff4164",
+        killed: "#ffabba", // This color is my selection rather than taken from the page
+        pending: "#96a5be"
+    };
 
-    /*
-    * Determines if a notification should be sent
-    */
-    function shouldSendNotification() {
-        const currentPage = window.location.href;
-        const pageIsSame = oldPage === currentPage; // We don't want to alert on status unless page is same as last status check
+    const SELECTORS = Object.freeze({
+        favicon: "#favicon",
+        svg: ".logo svg",
+        buildStatus: ".repo-item .status",
+        buildTitle: ".repo-item .title"
+    });
 
-        oldPage = currentPage;
-        return pageIsSame && NOTIFICATIONS_ENABLED;
-    }
-
-    /*
-    * Sends a chrome notification of the status change
-    */
-    function sendNotification(currentStatus) {
-        const notificationPromise = GM_notification({
-            title: `Status: ${currentStatus}`,
-            text: document.querySelector(".repo-item .title").innerText,
-            image: getDroneSVG(ICON_COLORS[currentStatus]),
-            onclick: window.focus
-        });
-        setTimeout(notificationPromise.remove, NOTIFICATION_TIMEOUT);
-    }
-
-    /*
-    * Gets the current status of the first element on the page matching the query selector
-    * Currently, this works best for
-    */
-    function getCurrentStatus() {
-        const statusElement = document.querySelector(".repo-item .status");
-        const wordsInStatusElementClassName = statusElement.className.replaceAll("-", " ").split(" ");
-        const currentStatus = wordsInStatusElementClassName.filter(x => Object.keys(ICON_COLORS).includes(x))[0];
-        return currentStatus;
-    }
-
-    function updateFaviconColor(currentStatus) {
-        const faviconElement = document.querySelector("#favicon");
-        faviconElement.href = getDroneSVG(ICON_COLORS[currentStatus]);
-    }
-
-    function main() {
-        const currentStatus = getCurrentStatus();
-        if (oldStatus === currentStatus) return; // if status hasn't changed we don't need to do anything;
-
-        updateFaviconColor(currentStatus);
-        if (shouldSendNotification()) {
-            sendNotification(currentStatus);
+    class DroneAlerter {
+        constructor(autoUpdate = true) {
+            this.status = "";
+            this.page = "";
+            this.ENCODED_SVG_DATA_URI = "data:image/svg+xml," + encodeURIComponent(document.querySelector(SELECTORS.svg).outerHTML);
+            if (autoUpdate) {
+                const alerter = this;
+                setInterval(() => alerter.checkForPageStatusChange(), FAVICON_UPDATE_INTERVAL);
+            }
         }
-        oldStatus = currentStatus;
+        statusChanged() {
+            this.updateFaviconColor();
+            this.updateNavbarIconColor();
+            if (this.shouldSendNotification()) {
+                this.sendNotification();
+            }
+        }
+        getStatus() {
+            const statusElement = document.querySelector(SELECTORS.buildStatus);
+            const wordsInStatusElementClassName = statusElement.className.replaceAll("-", " ").split(" ");
+            const currentStatus = wordsInStatusElementClassName.filter(x => Object.keys(ICON_COLORS).includes(x))[0];
+            return currentStatus;
+        }
+        checkForPageStatusChange() {
+            const newStatus = this.getStatus();
+            if (this.status !== newStatus) {
+                this.status = newStatus;
+                this.statusChanged();
+            }
+        }
+        updateFaviconColor() {
+            // we run this query selector every time because it changes after page load
+            document.querySelector(SELECTORS.favicon).href = this.getDroneSVG(ICON_COLORS[this.status]);
+        }
+        updateNavbarIconColor() {
+            document.querySelector(SELECTORS.svg).style.color = ICON_COLORS[this.status];
+        }
+        getDroneSVG(color = DEFAULT_COLOR) {
+            return this.ENCODED_SVG_DATA_URI.replace("currentColor", encodeURIComponent(color));
+        }
+        shouldSendNotification() {
+            const pageIsSame = this.page === window.location.href
+            this.page = window.location.href;
+            return pageIsSame && NOTIFICATIONS_ENABLED;
+        }
+        sendNotification() {
+            const notificationPromise = GM_notification({
+                title: `Status: ${this.status}`,
+                text: document.querySelector(SELECTORS.buildTitle).innerText,
+                image: this.getDroneSVG(ICON_COLORS[this.status]),
+                onclick: window.focus
+            });
+            setTimeout(notificationPromise.remove, NOTIFICATION_TIMEOUT);
+        }
     }
-
-    setInterval(main, 1000);
+    // After the svg is visible on the page, start polling for status changes
+    try {
+        waitForKeyElements(SELECTORS.svg, () => { new DroneAlerter() });
+    } catch{
+        new DroneAlerter();
+    }
 })();
-
