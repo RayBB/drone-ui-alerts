@@ -90,5 +90,9 @@
         }
     }
     // After the svg is visible on the page, start polling for status changes
-    waitForKeyElements(SELECTORS.svg, () => { new DroneAlerter() });
+    try {
+        waitForKeyElements(SELECTORS.svg, () => { new DroneAlerter() });
+    } catch{
+        new DroneAlerter();
+    }
 })();

@@ -21,6 +21,10 @@ To use this script just install one of the extension above, click [create new sc
 
 You should upate the `@match` section at the top of the script with the url of your drone installation.
 
+## Bookmarklets
+
+If you'd like to make a [bookmarket](https://en.wikipedia.org/wiki/Bookmarklet) to run as needed instead of installing an extension you can do that [here](https://chriszarate.github.io/bookmarkleter/). Notifications won't work with the bookmarklet since it depends on the Greasemonkey api.
+
 ### Next Steps
 
 * Use getValue for preferences https://violentmonkey.github.io/api/gm/#gm_getvalue
