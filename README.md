@@ -1,5 +1,5 @@
 # drone-ui-alerts
-Add updating favicon and desktop notifications to [drone.io ui](https://github.com/drone/drone-ui).
+This script adds updating favicon and desktop notifications to [drone.io ui](https://github.com/drone/drone-ui).
 
 ## What does this do
 
@@ -33,5 +33,5 @@ You can make a [bookmarklet](https://en.wikipedia.org/wiki/Bookmarklet) to run a
 
 ## Learnings
 
-* You cannot use CSS to change SVGs when they are encoded in `img` tags. Otherwise I would use CSS to [change the svg color](https://css-tricks.com/lodge/svg/09-svg-data-uris/).
+* You cannot use CSS to change SVGs when they are encoded in `img` tags. Otherwise I would use CSS to [change the SVG color](https://css-tricks.com/lodge/svg/09-svg-data-uris/).
 * You [don't](https://css-tricks.com/probably-dont-base64-svg/) need to base64 encode [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme), but you may need to encode them with [encodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent).
